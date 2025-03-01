@@ -1,0 +1,8 @@
+[versions]
+# plugins
+kotlin = "2.1.10"
+gradle-ktlint = "12.2.0"
+gradle-detekt = "1.23.8"
+
+[libraries]
+detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "gradle-detekt" }
