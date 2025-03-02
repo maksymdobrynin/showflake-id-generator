@@ -18,7 +18,11 @@ repositories {
 }
 
 dependencies {
-	detektPlugins(libs.detekt.formatting)
+	implementation(libs.kotlin.stdlib)
+	implementation(libs.kotlinx.coroutines)
+	testImplementation(libs.junit.jupiter)
+	testImplementation(libs.assertj.core)
+	testImplementation(libs.kotlinx.coroutines.test)
 }
 
 tasks.withType<KotlinCompile> {
