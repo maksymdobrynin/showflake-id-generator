@@ -17,9 +17,11 @@ class GeneratorTest {
 	fun `Should fail to init Generator when given time epoch doesn't match range`(invalidStartingTimeEpoch: Long) {
 		assertThatCode {
 			Generator(
-				startingEpoch = invalidStartingTimeEpoch,
-				datacenterId = 1,
-				workedId = 1,
+				GeneratorSettings(
+					startingEpoch = invalidStartingTimeEpoch,
+					datacenterId = 1,
+					workedId = 1,
+				),
 			)
 		}
 			.isExactlyInstanceOf(IllegalArgumentException::class.java)
@@ -31,8 +33,10 @@ class GeneratorTest {
 	fun `Should fail to init Generator when given Datacenter ID doesn't match range`(invalidDatacenterId: Long) {
 		assertThatCode {
 			Generator(
-				datacenterId = invalidDatacenterId,
-				workedId = 1,
+				GeneratorSettings(
+					datacenterId = invalidDatacenterId,
+					workedId = 1,
+				),
 			)
 		}
 			.isExactlyInstanceOf(IllegalArgumentException::class.java)
@@ -44,8 +48,10 @@ class GeneratorTest {
 	fun `Should fail to instantiate Generator when given Worker ID doesn't match possible range`(invalidWorkerId: Long) {
 		assertThatCode {
 			Generator(
-				datacenterId = 1,
-				workedId = invalidWorkerId,
+				GeneratorSettings(
+					datacenterId = 1,
+					workedId = invalidWorkerId,
+				),
 			)
 		}
 			.isExactlyInstanceOf(IllegalArgumentException::class.java)
@@ -57,9 +63,11 @@ class GeneratorTest {
 	fun `Should fail to instantiate Generator when given Sequence doesn't match possible range`(invalidSequence: Long) {
 		assertThatCode {
 			Generator(
-				datacenterId = 1,
-				workedId = 1,
-				sequence = invalidSequence,
+				GeneratorSettings(
+					datacenterId = 1,
+					workedId = 1,
+					sequence = invalidSequence,
+				),
 			)
 		}
 			.isExactlyInstanceOf(IllegalArgumentException::class.java)
@@ -285,11 +293,13 @@ class GeneratorTest {
 		nextTimeSeed: () -> Long,
 	): Generator =
 		Generator(
-			datacenterId = deterministicDatacenterId,
-			workedId = deterministicWorkerId,
-			startingEpoch = deterministicStartingEpoch,
-			sequence = deterministicSequence,
-			nextTimeSeed = nextTimeSeed,
+			GeneratorSettings(
+				datacenterId = deterministicDatacenterId,
+				workedId = deterministicWorkerId,
+				startingEpoch = deterministicStartingEpoch,
+				sequence = deterministicSequence,
+				nextTimeSeed = nextTimeSeed,
+			),
 		)
 
 	private fun deterministicIdentifier(

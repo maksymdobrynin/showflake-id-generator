@@ -4,14 +4,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
+import org.springframework.stereotype.Service
 
+@Service
 class Generator(
-	// 00:00:00 on January 1st, 2000 (UTC)
-	private val startingEpoch: Long = 946684800L,
-	private val nextTimeSeed: () -> Long = { System.currentTimeMillis() },
-	private val datacenterId: Long,
-	private val workedId: Long,
-	private var sequence: Long = 0L,
+	private val settings: GeneratorSettings,
 ) {
 	companion object {
 		private const val NEW_TIMESTAMP_TIMEOUT = 3000L
@@ -51,16 +48,16 @@ class Generator(
 	private var lastTimestamp = 0L
 
 	init {
-		require(startingEpoch >= 0 && startingEpoch <= Long.MAX_VALUE) {
+		require(settings.startingEpoch >= 0 && settings.startingEpoch <= Long.MAX_VALUE) {
 			"Starting time epoch must match range 0 .. ${Long.MAX_VALUE}"
 		}
-		require(datacenterId > 0 && datacenterId <= maxDatacenterId) {
+		require(settings.datacenterId > 0 && settings.datacenterId <= maxDatacenterId) {
 			"Datacenter ID must match range 1 .. $maxDatacenterId"
 		}
-		require(workedId > 0 && workedId <= maxWorkerId) {
+		require(settings.workedId > 0 && settings.workedId <= maxWorkerId) {
 			"Worker ID must match range 1 .. $maxWorkerId"
 		}
-		require(sequence >= 0 && sequence <= maxSequence) {
+		require(settings.sequence >= 0 && settings.sequence <= maxSequence) {
 			"Sequence must match range 0 .. $maxSequence"
 		}
 	}
@@ -79,31 +76,31 @@ class Generator(
 	 */
 	suspend fun nextId(): Long =
 		lock.withLock {
-			var timestamp = nextTimeSeed.invoke()
+			var timestamp = settings.nextTimeSeed.invoke()
 
 			if (lastTimestamp == timestamp) {
-				sequence = (sequence + 1) and maxSequence
-				if (sequence == 0L) {
+				settings.sequence = (settings.sequence + 1) and maxSequence
+				if (settings.sequence == 0L) {
 					timestamp = wait()
 				}
 			} else {
-				sequence = 0
+				settings.sequence = 0
 			}
 
 			lastTimestamp = timestamp
 
-			return ((lastTimestamp - startingEpoch) shl timestampIdShift) or
-				(datacenterId shl datacenterIdShift) or
-				(workedId shl workerIdShift) or
-				sequence
+			return ((lastTimestamp - settings.startingEpoch) shl timestampIdShift) or
+				(settings.datacenterId shl datacenterIdShift) or
+				(settings.workedId shl workerIdShift) or
+				settings.sequence
 		}
 
 	private suspend fun wait(): Long =
 		withTimeout(NEW_TIMESTAMP_TIMEOUT) {
-			var curr = nextTimeSeed.invoke()
+			var curr = settings.nextTimeSeed.invoke()
 			while (curr <= lastTimestamp) {
 				delay(NEW_TIMESTAMP_DELAY)
-				curr = nextTimeSeed.invoke()
+				curr = settings.nextTimeSeed.invoke()
 			}
 			curr
 		}

@@ -1,1 +1,1 @@
-rootProject.name = "showflake-id-generator"
+rootProject.name = "snowflake-id-generator"
