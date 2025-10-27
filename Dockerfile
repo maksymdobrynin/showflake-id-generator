@@ -1,11 +1,24 @@
-# Use an official OpenJDK runtime as a parent image
-FROM openjdk:21-jdk
-
-# Set the working directory in the container
+# ---------- Build stage ----------
+FROM eclipse-temurin:21-jdk-jammy as builder
 WORKDIR /app
 
-# Copy the project JAR file into the container at /app
-COPY /build/libs/snowflake-id-generator-0.0.1-SNAPSHOT.jar /app/snowflake-id-generator.jar
+COPY build.gradle.kts settings.gradle.kts gradlew ./
+COPY gradle gradle
 
-# Run the JAR file
-ENTRYPOINT ["java","-jar","/app/snowflake-id-generator.jar"]
+RUN ./gradlew dependencies || return 0
+
+COPY src src
+
+RUN ./gradlew clean build -x test
+
+# ---------- Runtime stage ----------
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+
+RUN useradd --system --create-home --uid 1001 appuser
+
+USER appuser
+
+COPY --chown=appuser:appuser --from=builder /app/build/libs/*-SNAPSHOT.jar app.jar
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
